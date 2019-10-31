@@ -22,21 +22,21 @@ struct NumTraits<scalar>
 using namespace Eigen;
 
 /*
-This is the initialization routine for the random number generator RANMAR()
+This is the initialization routine for the random_engine number generator RANMAR()
 NOTE: The seed variables can have values between:    0 <= IJ <= 31328
                                                      0 <= KL <= 30081
-The random number sequences created by these two seeds are of sufficient 
+The random_engine number sequences created by these two seeds are of sufficient 
 length to complete an entire calculation with. For example, if sveral 
 different groups are working on different parts of the same calculation,
 each group could be assigned its own IJ seed. This would leave each group
-with 30000 choices for the second seed. That is to say, this random 
+with 30000 choices for the second seed. That is to say, this random_engine 
 number generator can create 900 million different subsequences -- with 
 each subsequence having a length of approximately 10^30.
 
-Use IJ = 1802 & KL = 9373 to test the random number generator. The
-subroutine RANMAR should be used to generate 20000 random numbers.
-Then display the next six random numbers generated multiplied by 4096*4096
-If the random number generator is working properly, the random numbers
+Use IJ = 1802 & KL = 9373 to test the random_engine number generator. The
+subroutine RANMAR should be used to generate 20000 random_engine numbers.
+Then display the next six random_engine numbers generated multiplied by 4096*4096
+If the random_engine number generator is working properly, the random_engine numbers
 should be:
           6533892.0  14220222.0  7275067.0
           6172232.0  8354498.0   10633180.0
@@ -98,88 +98,114 @@ class Ranmar {
     static constexpr double cm{16777213.0 / 16777216.0};
 };
 
+static Ranmar random_engine(6, 17);
+
 void para2(Matrix<scalar, Dynamic, 3>& phi, Matrix<scalar, 14, 1>& x) {
+    auto A1 = x(0);
+    auto A2 = x(1);
+    auto B1 = x(2);
+    auto B2 = x(3);
+    auto C1 = x(4);
+    auto C2 = x(5);
+    auto DE = x(6);
+
+    for (int i = 0; i < phi.rows() / 2; ++i) {
+        do {
+            phi(i, 0) = random_engine() * (A2 - A1) + A1;
+            phi(i, 1) = random_engine() * (B2 - B1) + B1;
+            phi(i, 2) = random_engine() * (C2 - C1) + C1;
+        } while (phi(i, 0) + phi(i, 1) < DE || phi(i, 1) + phi(i, 2) < DE || phi(i, 0) + phi(i, 2) < DE);
+    }
+
+    A1 = x(7);
+    A2 = x(8);
+    B1 = x(9);
+    B2 = x(10);
+    C1 = x(11);
+    C2 = x(12);
+    DE = x(13);
+
+    for (int i = phi.rows() / 2 + 1; i < phi.rows(); ++i) {
+        do {
+            phi(i, 0) = random_engine() * (A2 - A1) + A1;
+            phi(i, 1) = random_engine() * (B2 - B1) + B1;
+            phi(i, 2) = random_engine() * (C2 - C1) + C1;
+        } while (phi(i, 0) + phi(i, 1) < DE || phi(i, 1) + phi(i, 2) < DE || phi(i, 0) + phi(i, 2) < DE);
+    }
 }
-/*
-     SUBROUTINE PARA2(PHI,X,N)
-C
-C     GENERATES INITIAL 3 N NONLINEAR PARAMETERS
-C
-      USE qdmodule
-      INTEGER I,N    
-      type(qd_real) PHI(N,3),QY(3),X(14),DE,A1,A2,B1,B2,C1,C2,T1,T2,T3
-      REAL Y(3)
- 
-C     THE ASYMPTOTIC WAVE FUNCTION DECAYS ACCORDING TO DE=SQRT(2*E_DISSOCIATION)
-C     THEREFORE NONLINEAR PARAMETERS SHOULD BE NOT MUCH SMALLER
-C     DE SHOULD BE SET BY HAND FOR A CONSIDERED SYSTEM DE=SQRT(2(2-E))
 
-      CALL RMARIN(6,17)
-      A1 = X(1)
-      A2 = X(2)
-      B1 = X(3)
-      B2 = X(4)
-      C1 = X(5)
-      C2 = X(6)
-      DE = X(7) 
- 
-      DO I=1,N/2
- 
- 10   CONTINUE
-      CALL RANMAR(Y,3)
+void hamlnorm(Matrix<scalar, Dynamic, Dynamic>& hh,
+              Matrix<scalar, Dynamic, Dynamic>& nn,
+              Matrix<scalar, Dynamic, 3>& phi) {
+    for (int i = 0; i < phi.rows(); ++i) {
+        auto a1 = phi(i, 0);
+        auto b1 = phi(i, 1);
+        auto c1 = phi(i, 2);
+        for (int j = i; j < phi.rows(); ++j) {
+            auto a2 = phi(j, 0);
+            auto b2 = phi(j, 1);
+            auto c2 = phi(j, 2);
 
-      QY(1) = DBLE(Y(1))      
-      QY(2) = DBLE(Y(2))
-      QY(3) = DBLE(Y(3))      
+            auto a = 2.0 / (b1 + b2 + c1 + c2);
+            auto b = 2.0 / (a1 + a2 + c1 + c2);
+            auto c = 2.0 / (a1 + a2 + b1 + b2);
+            auto D = 2.0 / (a1 + b2 + c1 + c2);
+            auto F = 2.0 / (b1 + a2 + c1 + c2);
 
-      T1 = QY(1)*(A2-A1)+A1
-      T2 = QY(2)*(B2-B1)+B1
-      T3 = QY(3)*(C2-C1)+C1
- 
-      IF((T1+T2).LT.DE .OR. (T2+T3).LT.DE .OR. (T1+T3).LT.DE) GOTO 10
+            auto X1  = a * b * c;
+            auto X2  = a * b;
+            auto X3  = a * c;
+            auto X4  = b * c;
+            auto X5  = X2 + X3 + X4;
+            auto X6  = a * a;
+            auto X7  = b * b;
+            auto X8  = c * c;
+            auto X9  = a + c;
+            auto X10 = b + c;
+            auto X11 = a + b;
 
-       PHI(I,1) = T1
-       PHI(I,2) = T2
-       PHI(I,3) = T3
-      ENDDO
+            auto Y1  = c * D * F;
+            auto Y2  = D * F;
+            auto Y3  = D * c;
+            auto Y4  = F * c;
+            auto Y5  = Y2 + Y3 + Y4;
+            auto Y6  = D * D;
+            auto Y7  = F * F;
+            auto Y8  = c * c;
+            auto Y9  = D + c;
+            auto Y10 = F + c;
+            auto Y11 = D + F;
 
-      A1 = X(8)
-      A2 = X(9)
-      B1 = X(10)
-      B2 = X(11)
-      C1 = X(12)
-      C2 = X(13) 
-      DE = X(14)
- 
-      DO I=N/2+1,N
- 
- 11      CONTINUE
-      CALL RANMAR(Y,3)
+            const scalar Z(2.0);
 
-      QY(1) = DBLE(Y(1))      
-      QY(2) = DBLE(Y(2))
-      QY(3) = DBLE(Y(3))      
-    
-      T1 = QY(1)*(A2-A1)+A1
-      T2 = QY(2)*(B2-B1)+B1
-      T3 = QY(3)*(C2-C1)+C1  
- 
-      IF((T1+T2).LT.DE .OR. (T2+T3).LT.DE .OR. (T1+T3).LT.DE) GOTO 11
+            hh(i, j) = (X1 * (4 * X8 + 2 * X5 -
+                              2 * X3 * X9 * (a2 * c1 + a1 * c2) - 2 * X4 * X10 * (b2 * c1 + b1 * c2) +
+                              (X1 + X11 * X8 + X7 * X9 + X6 * X10) *
+                                  (a1 * a2 + b1 * b2 + a2 * c1 + b2 * c1 + a1 * c2 + b1 * c2 + 2 * c1 * c2) -
+                              4 * (X6 + X7 + X5) * Z)) /
+                           128 +
+                       (Y1 * (4 * Y8 - 2 * Y3 * (a2 * c1 + b1 * c2) * Y9 -
+                              2 * Y4 * (b2 * c1 + a1 * c2) * Y10 + 2 * Y5 +
+                              (a2 * b1 + a1 * b2 + a2 * c1 + b2 * c1 + a1 * c2 + b1 * c2 + 2 * c1 * c2) *
+                                  (Y1 + Y9 * Y7 + Y6 * Y10 + Y8 * Y11) -
+                              4 * (Y5 + Y6 + Y7) * Z)) /
+                           128;
 
-       PHI(I,1) = T1
-       PHI(I,2) = T2
-       PHI(I,3) = T3
-      ENDDO
+            nn(i, j) = X1 * (X6 * X10 + X7 * X9 + X8 * X11 + X1) / 64 +
+                       Y1 * (Y8 * Y11 + Y6 * Y10 + Y7 * Y9 + Y1) / 64;
 
-       RETURN
-      END
-*/
+            hh(j, i) = hh(i, j);
+            nn(j, i) = nn(i, j);
+        }
+    }
+}
 
 int main() {
-    std::cout << "Hello !\n";
+    std::cout << std::setprecision(std::numeric_limits<scalar>::max_digits10);
 
     constexpr int max_iterations = 30;
     constexpr int m              = 14;
+    constexpr int n              = 1500;
     const scalar en_drake("-2.903724377034119598311e+00");
 
     Matrix<scalar, m, 1> x;
@@ -199,29 +225,77 @@ int main() {
         scalar("1.9548131347420990e+00"),
         scalar("2.8616266805520390e+00");
 
+
+
+    /*
+    // for n = 100
+          
+    X( 1)= "1.2845084222741440D+00"
+      X( 2)= "2.5525827520389550D+00"
+      X( 3)= "1.3022061582156230D+00"
+      X( 4)= "5.2592228607912200D+00"
+      X( 5)="-5.3005320302503930D-02"
+      X( 6)= "5.0118833268966480D-01"
+      X( 7)= "1.1664947151404250D+00"
+      X( 8)= "2.9309131965855850D+00"
+      X( 9)= "5.3276662855341290D+00"
+      X(10)= "3.6503129028788250D+00"
+      X(11)= "6.5776225188830830D+00"
+      X(12)="-2.1506973153746800D-01"
+      X(13)= "1.9548131347420990D+00"
+      X(14)= "2.8616266805520390D+00"
+    
+    */
+
     const scalar epsilon("1.0e-50");
     scalar eig  = en_drake - 1.0e-5;
     scalar eold = eig;
+    scalar eprev;
+
+    Matrix<scalar, Dynamic, 3> phi(n, 3);
+    para2(phi, x);
+    Matrix<scalar, Dynamic, Dynamic> dh(n, n);
+    Matrix<scalar, Dynamic, Dynamic> dn(n, n);
+    hamlnorm(dh, dn, phi);
+
+    Matrix<scalar, Dynamic, 1> v = Matrix<scalar, Dynamic, 1>::Ones(n);
+    Matrix<scalar, Dynamic, 1> w = v;
+    Matrix<scalar, Dynamic, 1> u = v;
+
+    auto dh_ldlt = dh.householderQr();
+
+    scalar sm;
+    int it = 1;
+    for (; it <= max_iterations; ++it) {
+        v     = dh_ldlt.solve(v);
+        u     = v;
+        w     = dn * v;
+        sm    = v.dot(w);
+        sm    = 1.0 / sqrt(sm);
+        eprev = eig;
+        eig   = eold + sm;
+        std::cout << "it = " << it << "  eig = " << eig << std::endl;
+        v = w * sm;
+        if (abs(eprev - eig) > epsilon * abs(eig))
+            break;
+    }
+    if (it == max_iterations) {
+        std::cout << " ITMAX OR EPS TOO SMALL\n"
+                  << " LACK OF CONVERGENCE IN INVERSE ITERATION\n";
+    }
+
+    std::cout << "N   =    " << n << '\n'
+              << "EIG =    " << eig << '\n';
+
+    v = u * sm;
+
+    std::cout << "NORM-1 = " << v.dot(dn * v) - scalar(1.0) << '\n';
+    auto est = v.dot(dh * v);
+    std::cout << "EST = " << est << '\n'
+              << "EIG-EST = " << est - eig << '\n';
 
     /*
-Use IJ = 1802 & KL = 9373 to test the random number generator. The
-subroutine RANMAR should be used to generate 20000 random numbers.
-Then display the next six random numbers generated multiplied by 4096*4096
-If the random number generator is working properly, the random numbers
-should be:
-          6533892.0  14220222.0  7275067.0
-          6172232.0  8354498.0   10633180.0
-*/
-    Ranmar r(1802, 9373);
-    for (int i = 0; i < 20000; ++i)
-        r();
-
-    std::cout << std::fixed;
-    for (int i = 0; i < 6; ++i)
-        std::cout << r() * 4096 * 4096 << "    ";
-    std::cout << '\n';
-
-    /*      nb = 32
+      nb = 32
       nbi = 32
       la = (n*(n+nb+1))/2
       ln = (n*(n+1))/2

@@ -15,6 +15,11 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS
     )
 
 
+find_package(OpenMP REQUIRED)
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+    
+
+
 add_executable(he_kor ${sources})
 
 target_compile_features(he_kor 
@@ -24,5 +29,9 @@ target_compile_features(he_kor
 target_compile_options(he_kor 
                        PRIVATE 
                        -Wall -Wextra -pedantic)
+
+target_link_libraries(he_kor 
+                        PRIVATE 
+                        OpenMP::OpenMP_CXX Eigen3::Eigen)
 
                        
