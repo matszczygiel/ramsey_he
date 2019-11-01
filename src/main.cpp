@@ -20,6 +20,7 @@ struct NumTraits<scalar>
 }  // namespace Eigen
 
 using namespace Eigen;
+using namespace std;
 
 /*
 This is the initialization routine for the random_engine number generator RANMAR()
@@ -125,7 +126,7 @@ void para2(Matrix<scalar, Dynamic, 3>& phi, Matrix<scalar, 14, 1>& x) {
     C2 = x(12);
     DE = x(13);
 
-    for (int i = phi.rows() / 2 + 1; i < phi.rows(); ++i) {
+    for (int i = phi.rows() / 2; i < phi.rows(); ++i) {
         do {
             phi(i, 0) = random_engine() * (A2 - A1) + A1;
             phi(i, 1) = random_engine() * (B2 - B1) + B1;
@@ -149,8 +150,8 @@ void hamlnorm(Matrix<scalar, Dynamic, Dynamic>& hh,
             auto a = 2.0 / (b1 + b2 + c1 + c2);
             auto b = 2.0 / (a1 + a2 + c1 + c2);
             auto c = 2.0 / (a1 + a2 + b1 + b2);
-            auto D = 2.0 / (a1 + b2 + c1 + c2);
-            auto F = 2.0 / (b1 + a2 + c1 + c2);
+            auto d = 2.0 / (a1 + b2 + c1 + c2);
+            auto f = 2.0 / (b1 + a2 + c1 + c2);
 
             auto X1  = a * b * c;
             auto X2  = a * b;
@@ -164,35 +165,35 @@ void hamlnorm(Matrix<scalar, Dynamic, Dynamic>& hh,
             auto X10 = b + c;
             auto X11 = a + b;
 
-            auto Y1  = c * D * F;
-            auto Y2  = D * F;
-            auto Y3  = D * c;
-            auto Y4  = F * c;
+            auto Y1  = c * d * f;
+            auto Y2  = d * f;
+            auto Y3  = d * c;
+            auto Y4  = f * c;
             auto Y5  = Y2 + Y3 + Y4;
-            auto Y6  = D * D;
-            auto Y7  = F * F;
+            auto Y6  = d * d;
+            auto Y7  = f * f;
             auto Y8  = c * c;
-            auto Y9  = D + c;
-            auto Y10 = F + c;
-            auto Y11 = D + F;
+            auto Y9  = d + c;
+            auto Y10 = f + c;
+            auto Y11 = d + f;
 
             const scalar Z(2.0);
 
-            hh(i, j) = (X1 * (4 * X8 + 2 * X5 -
-                              2 * X3 * X9 * (a2 * c1 + a1 * c2) - 2 * X4 * X10 * (b2 * c1 + b1 * c2) +
+            hh(i, j) = (X1 * (4.0 * X8 + 2.0 * X5 -
+                              2.0 * X3 * X9 * (a2 * c1 + a1 * c2) - 2.0 * X4 * X10 * (b2 * c1 + b1 * c2) +
                               (X1 + X11 * X8 + X7 * X9 + X6 * X10) *
-                                  (a1 * a2 + b1 * b2 + a2 * c1 + b2 * c1 + a1 * c2 + b1 * c2 + 2 * c1 * c2) -
-                              4 * (X6 + X7 + X5) * Z)) /
-                           128 +
-                       (Y1 * (4 * Y8 - 2 * Y3 * (a2 * c1 + b1 * c2) * Y9 -
-                              2 * Y4 * (b2 * c1 + a1 * c2) * Y10 + 2 * Y5 +
-                              (a2 * b1 + a1 * b2 + a2 * c1 + b2 * c1 + a1 * c2 + b1 * c2 + 2 * c1 * c2) *
+                                  (a1 * a2 + b1 * b2 + a2 * c1 + b2 * c1 + a1 * c2 + b1 * c2 + 2.0 * c1 * c2) -
+                              4.0 * (X6 + X7 + X5) * Z)) /
+                           128.0 +
+                       (Y1 * (4.0 * Y8 - 2.0 * Y3 * (a2 * c1 + b1 * c2) * Y9 -
+                              2.0 * Y4 * (b2 * c1 + a1 * c2) * Y10 + 2.0 * Y5 +
+                              (a2 * b1 + a1 * b2 + a2 * c1 + b2 * c1 + a1 * c2 + b1 * c2 + 2.0 * c1 * c2) *
                                   (Y1 + Y9 * Y7 + Y6 * Y10 + Y8 * Y11) -
-                              4 * (Y5 + Y6 + Y7) * Z)) /
-                           128;
+                              4.0 * (Y5 + Y6 + Y7) * Z)) /
+                           128.0;
 
-            nn(i, j) = X1 * (X6 * X10 + X7 * X9 + X8 * X11 + X1) / 64 +
-                       Y1 * (Y8 * Y11 + Y6 * Y10 + Y7 * Y9 + Y1) / 64;
+            nn(i, j) = X1 * (X6 * X10 + X7 * X9 + X8 * X11 + X1) / 64.0 +
+                       Y1 * (Y8 * Y11 + Y6 * Y10 + Y7 * Y9 + Y1) / 64.0;
 
             hh(j, i) = hh(i, j);
             nn(j, i) = nn(i, j);
@@ -201,14 +202,34 @@ void hamlnorm(Matrix<scalar, Dynamic, Dynamic>& hh,
 }
 
 int main() {
-    std::cout << std::setprecision(std::numeric_limits<scalar>::max_digits10);
+    std::cout << std::setprecision(std::numeric_limits<scalar>::max_digits10) << scientific;
 
     constexpr int max_iterations = 30;
     constexpr int m              = 14;
-    constexpr int n              = 1500;
+    constexpr int n              = 100;
     const scalar en_drake("-2.903724377034119598311e+00");
 
     Matrix<scalar, m, 1> x;
+
+    // for n = 1500
+    /*
+    x << scalar("1.2845084222741440e+00"),
+        scalar("2.5525827520389550e+00"),
+        scalar("1.3022061582156230e+00"),
+        scalar("5.2592228607912200e+00"),
+        scalar("-5.3005320302503930e-02"),
+        scalar("5.0118833268966480e-01"),
+        scalar("1.1664947151404250e+00"),
+        scalar("2.9309131965855850e+00"),
+        scalar("5.3276662855341290e+00"),
+        scalar("3.6503129028788250e+00"),
+        scalar("6.5776225188830830e+00"),
+        scalar("-2.1506973153746800e-01"),
+        scalar("1.9548131347420990e+00"),
+        scalar("2.8616266805520390e+00");
+*/
+
+    // for n = 100
 
     x << scalar("1.2845084222741440e+00"),
         scalar("2.5525827520389550e+00"),
@@ -225,28 +246,6 @@ int main() {
         scalar("1.9548131347420990e+00"),
         scalar("2.8616266805520390e+00");
 
-
-
-    /*
-    // for n = 100
-          
-    X( 1)= "1.2845084222741440D+00"
-      X( 2)= "2.5525827520389550D+00"
-      X( 3)= "1.3022061582156230D+00"
-      X( 4)= "5.2592228607912200D+00"
-      X( 5)="-5.3005320302503930D-02"
-      X( 6)= "5.0118833268966480D-01"
-      X( 7)= "1.1664947151404250D+00"
-      X( 8)= "2.9309131965855850D+00"
-      X( 9)= "5.3276662855341290D+00"
-      X(10)= "3.6503129028788250D+00"
-      X(11)= "6.5776225188830830D+00"
-      X(12)="-2.1506973153746800D-01"
-      X(13)= "1.9548131347420990D+00"
-      X(14)= "2.8616266805520390D+00"
-    
-    */
-
     const scalar epsilon("1.0e-50");
     scalar eig  = en_drake - 1.0e-5;
     scalar eold = eig;
@@ -254,20 +253,21 @@ int main() {
 
     Matrix<scalar, Dynamic, 3> phi(n, 3);
     para2(phi, x);
+
     Matrix<scalar, Dynamic, Dynamic> dh(n, n);
     Matrix<scalar, Dynamic, Dynamic> dn(n, n);
     hamlnorm(dh, dn, phi);
-
+    
     Matrix<scalar, Dynamic, 1> v = Matrix<scalar, Dynamic, 1>::Ones(n);
     Matrix<scalar, Dynamic, 1> w = v;
     Matrix<scalar, Dynamic, 1> u = v;
 
-    auto dh_ldlt = dh.householderQr();
+    auto dh_ldlt = dh.ldlt();
 
     scalar sm;
     int it = 1;
     for (; it <= max_iterations; ++it) {
-        v     = dh_ldlt.solve(v);
+        v = dh_ldlt.solve(v);
         u     = v;
         w     = dn * v;
         sm    = v.dot(w);
@@ -284,14 +284,14 @@ int main() {
                   << " LACK OF CONVERGENCE IN INVERSE ITERATION\n";
     }
 
-    std::cout << "N   =    " << n << '\n'
-              << "EIG =    " << eig << '\n';
+    std::cout << "N   =     " << n << '\n'
+              << "EIG =     " << eig << '\n';
 
     v = u * sm;
 
-    std::cout << "NORM-1 = " << v.dot(dn * v) - scalar(1.0) << '\n';
+    std::cout << "NORM-1 =  " << v.dot(dn * v) - scalar(1.0) << '\n';
     auto est = v.dot(dh * v);
-    std::cout << "EST = " << est << '\n'
+    std::cout << "EST =     " << est << '\n'
               << "EIG-EST = " << est - eig << '\n';
 
     /*
