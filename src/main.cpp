@@ -257,18 +257,20 @@ int main() {
     Matrix<scalar, Dynamic, Dynamic> dh(n, n);
     Matrix<scalar, Dynamic, Dynamic> dn(n, n);
     hamlnorm(dh, dn, phi);
-    
+
     Matrix<scalar, Dynamic, 1> v = Matrix<scalar, Dynamic, 1>::Ones(n);
     Matrix<scalar, Dynamic, 1> w = v;
     Matrix<scalar, Dynamic, 1> u = v;
 
-    auto dh_ldlt = dh.ldlt();
+    auto hh           = dh - eig * dn;
+    // Matrix<scalar, Dynamic, Dynamic>::Identity(n, n);
+    auto dh_ldlt = hh.ldlt();
 
     scalar sm;
     int it = 1;
     for (; it <= max_iterations; ++it) {
-        v = dh_ldlt.solve(v);
-        u     = v;
+        u     = dh_ldlt.solve(v);
+        v     = u;
         w     = dn * v;
         sm    = v.dot(w);
         sm    = 1.0 / sqrt(sm);
@@ -276,7 +278,7 @@ int main() {
         eig   = eold + sm;
         std::cout << "it = " << it << "  eig = " << eig << std::endl;
         v = w * sm;
-        if (abs(eprev - eig) > epsilon * abs(eig))
+        if (abs(eprev - eig) < epsilon * abs(eig))
             break;
     }
     if (it == max_iterations) {
@@ -292,73 +294,6 @@ int main() {
     std::cout << "NORM-1 =  " << v.dot(dn * v) - scalar(1.0) << '\n';
     auto est = v.dot(dh * v);
     std::cout << "EST =     " << est << '\n'
-              << "EIG-EST = " << est - eig << '\n';
+              << "EIG-EST = " << eig - est << '\n';
 
-    /*
-      nb = 32
-      nbi = 32
-      la = (n*(n+nb+1))/2
-      ln = (n*(n+1))/2
-
-      ALLOCATE(HH(la),DH(ln),DN(ln),U(N),V(N),W(N),PHI(N,3),d(2*n),buf(n+nb*n),perm(n))
-
-      CALL PARA2(PHI,X,N)
-      CALL HAMLNORM(DH,DN,PHI,N)
-      DO I=1,N
-         V(I) = one
-      ENDDO
-      HH(la+1-ln:la) = DH(1:ln)-eig*DN(1:ln)
-!
-      call ma64_factor_qd(n,n,nb,nbi,HH,la,cntl,q,ll,perm,d,buf,info)
-      if(info%num_zero > 0) WRITE(*,*) "WARNING, num_zero = ", info%num_zero
-!
-      do it=1,ITMAX
-         call hsl_leq1s(n,n,nb,v,flag,HH,ll,d,perm)
-         u(1:n) = v(1:n)
-         call qdspmv('l',n,one,DN,v,1,zero,w,1)
-         call qddot(n,v,1,w,1,sm)
-         sm = one/sqrt(sm)
-         eprev = eig
-         eig = eole+sm
-!         WRITE(*,*) 'it=',it,'eig='
-!         call QDWRITE(6,eig)
-         v(1:n) = w(1:n)*sm
-         if (abs(eprev-eig).lt.eps*abs(eig)) goto 100
-      end do
-      WRITE(*,*) 'ITMAX OR EPS TOO SMALL'
-      WRITE(*,*) 'LACK OF CONVERGENCE IN INVERSE ITERATION'
-  100 CONTINUE
-    
-      WRITE(*,*) 'N=',N
-      WRITE(*,*) 'EIG='
-      CALL QDWRITE(6,EIG)
-!
-!     EIGENVECTOR
-!
-      v(1:n) = sm*u(1:n)
-!
-!      WRITE( output_file, '( "wf_1S0_", i0,"_qu.dat" )' ) N
-!      OPEN(UNIT=9,FILE=output_file,FORM='UNFORMATTED')
-!      DO I=1,N
-!         WRITE(9) PHI(I,1),PHI(I,2),PHI(I,3),V(I)
-!      ENDDO
-!      CLOSE(9)
-!
-!     TESTING NORM
-!
-      call qdspmv('l',n,one,DN,v,1,zero,w,1)
-      call qddot(n,v,1,w,1,sm)
-      WRITE(*,*) "NORM-1="
-      sm = sm-qd_one
-      call QDWRITE(6,sm)      
-!
-!     TESTING ENERGY
-!
-      call qdspmv('l',n,one,DH,v,1,zero,w,1)
-      call qddot(n,v,1,w,1,est)
-      WRITE(*,*) "EST="
-      call QDWRITE(6,est)
-      WRITE(*,*) "EIG-EST="
-      call QDWRITE(6,eig-est)  
-*/
 }
