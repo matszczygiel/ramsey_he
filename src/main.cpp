@@ -1,205 +1,13 @@
 #include <iostream>
 #include <vector>
 
-#include <boost/multiprecision/cpp_bin_float.hpp>
 #include <eigen3/Eigen/Dense>
 
-namespace boost {
-namespace multiprecision {
-using cpp_bin_float_oct = number<backends::cpp_bin_float<237, backends::digit_base_2, void, boost::int32_t, -262142, 262143>, et_off>;
-}
-}  // namespace boost
-
-using scalar = boost::multiprecision::cpp_bin_float_oct;
-
-namespace Eigen {
-template <>
-struct NumTraits<scalar>
-    : GenericNumTraits<scalar> {
-};
-}  // namespace Eigen
+#include "functions.h"
+#include "definitions.h"
 
 using namespace Eigen;
 using namespace std;
-
-/*
-This is the initialization routine for the random_engine number generator RANMAR()
-NOTE: The seed variables can have values between:    0 <= IJ <= 31328
-                                                     0 <= KL <= 30081
-The random_engine number sequences created by these two seeds are of sufficient 
-length to complete an entire calculation with. For example, if sveral 
-different groups are working on different parts of the same calculation,
-each group could be assigned its own IJ seed. This would leave each group
-with 30000 choices for the second seed. That is to say, this random_engine 
-number generator can create 900 million different subsequences -- with 
-each subsequence having a length of approximately 10^30.
-
-Use IJ = 1802 & KL = 9373 to test the random_engine number generator. The
-subroutine RANMAR should be used to generate 20000 random_engine numbers.
-Then display the next six random_engine numbers generated multiplied by 4096*4096
-If the random_engine number generator is working properly, the random_engine numbers
-should be:
-          6533892.0  14220222.0  7275067.0
-          6172232.0  8354498.0   10633180.0
-*/
-
-class Ranmar {
-   public:
-    constexpr Ranmar(int ij, int kl) {
-        assert(ij >= 0 && ij <= 31328);
-        assert(kl >= 0 && kl <= 30081);
-
-        auto i = (ij / 177) % 177 + 2;
-        auto j = ij % 177 + 2;
-        auto k = (kl / 169) % 178 + 1;
-        auto l = kl % 169;
-
-        for (int ii = 0; ii < 97; ++ii) {
-            auto s = 0.0;
-            auto t = 0.5;
-            for (int jj = 0; jj < 24; ++jj) {
-                auto m = (((i * j) % 179) * k) % 179;
-                i      = j;
-                j      = k;
-                k      = m;
-                l      = (53 * l + 1) % 169;
-                if ((l * m) % 64 >= 32)
-                    s = s + t;
-                t = 0.5 * t;
-            }
-            u[ii] = s;
-        }
-    }
-
-    double operator()() {
-        auto uni = u[i97] - u[j97];
-        if (uni < 0.0)
-            uni += 1.0;
-        u[i97] = uni;
-        if (--i97 < 0)
-            i97 = 96;
-        if (--j97 < 0)
-            j97 = 96;
-        c -= cd;
-        if (c < 0.0)
-            c += cm;
-        uni = uni - c;
-        if (uni < 0.0)
-            uni += 1.0;
-        return uni;
-    }
-
-   private:
-    double u[97]{};
-    double c{362436.0 / 16777216.0};
-    int i97{96};
-    int j97{32};
-
-    static constexpr double cd{7654321.0 / 16777216.0};
-    static constexpr double cm{16777213.0 / 16777216.0};
-};
-
-static Ranmar random_engine(6, 17);
-
-void para2(Matrix<scalar, Dynamic, 3>& phi, Matrix<scalar, 14, 1>& x) {
-    auto A1 = x(0);
-    auto A2 = x(1);
-    auto B1 = x(2);
-    auto B2 = x(3);
-    auto C1 = x(4);
-    auto C2 = x(5);
-    auto DE = x(6);
-
-    for (int i = 0; i < phi.rows() / 2; ++i) {
-        do {
-            phi(i, 0) = random_engine() * (A2 - A1) + A1;
-            phi(i, 1) = random_engine() * (B2 - B1) + B1;
-            phi(i, 2) = random_engine() * (C2 - C1) + C1;
-        } while (phi(i, 0) + phi(i, 1) < DE || phi(i, 1) + phi(i, 2) < DE || phi(i, 0) + phi(i, 2) < DE);
-    }
-
-    A1 = x(7);
-    A2 = x(8);
-    B1 = x(9);
-    B2 = x(10);
-    C1 = x(11);
-    C2 = x(12);
-    DE = x(13);
-
-    for (int i = phi.rows() / 2; i < phi.rows(); ++i) {
-        do {
-            phi(i, 0) = random_engine() * (A2 - A1) + A1;
-            phi(i, 1) = random_engine() * (B2 - B1) + B1;
-            phi(i, 2) = random_engine() * (C2 - C1) + C1;
-        } while (phi(i, 0) + phi(i, 1) < DE || phi(i, 1) + phi(i, 2) < DE || phi(i, 0) + phi(i, 2) < DE);
-    }
-}
-
-void hamlnorm(Matrix<scalar, Dynamic, Dynamic>& hh,
-              Matrix<scalar, Dynamic, Dynamic>& nn,
-              Matrix<scalar, Dynamic, 3>& phi) {
-    for (int i = 0; i < phi.rows(); ++i) {
-        auto a1 = phi(i, 0);
-        auto b1 = phi(i, 1);
-        auto c1 = phi(i, 2);
-        for (int j = i; j < phi.rows(); ++j) {
-            auto a2 = phi(j, 0);
-            auto b2 = phi(j, 1);
-            auto c2 = phi(j, 2);
-
-            auto a = 2.0 / (b1 + b2 + c1 + c2);
-            auto b = 2.0 / (a1 + a2 + c1 + c2);
-            auto c = 2.0 / (a1 + a2 + b1 + b2);
-            auto d = 2.0 / (a1 + b2 + c1 + c2);
-            auto f = 2.0 / (b1 + a2 + c1 + c2);
-
-            auto X1  = a * b * c;
-            auto X2  = a * b;
-            auto X3  = a * c;
-            auto X4  = b * c;
-            auto X5  = X2 + X3 + X4;
-            auto X6  = a * a;
-            auto X7  = b * b;
-            auto X8  = c * c;
-            auto X9  = a + c;
-            auto X10 = b + c;
-            auto X11 = a + b;
-
-            auto Y1  = c * d * f;
-            auto Y2  = d * f;
-            auto Y3  = d * c;
-            auto Y4  = f * c;
-            auto Y5  = Y2 + Y3 + Y4;
-            auto Y6  = d * d;
-            auto Y7  = f * f;
-            auto Y8  = c * c;
-            auto Y9  = d + c;
-            auto Y10 = f + c;
-            auto Y11 = d + f;
-
-            const scalar Z(2.0);
-
-            hh(i, j) = (X1 * (4.0 * X8 + 2.0 * X5 -
-                              2.0 * X3 * X9 * (a2 * c1 + a1 * c2) - 2.0 * X4 * X10 * (b2 * c1 + b1 * c2) +
-                              (X1 + X11 * X8 + X7 * X9 + X6 * X10) *
-                                  (a1 * a2 + b1 * b2 + a2 * c1 + b2 * c1 + a1 * c2 + b1 * c2 + 2.0 * c1 * c2) -
-                              4.0 * (X6 + X7 + X5) * Z)) /
-                           128.0 +
-                       (Y1 * (4.0 * Y8 - 2.0 * Y3 * (a2 * c1 + b1 * c2) * Y9 -
-                              2.0 * Y4 * (b2 * c1 + a1 * c2) * Y10 + 2.0 * Y5 +
-                              (a2 * b1 + a1 * b2 + a2 * c1 + b2 * c1 + a1 * c2 + b1 * c2 + 2.0 * c1 * c2) *
-                                  (Y1 + Y9 * Y7 + Y6 * Y10 + Y8 * Y11) -
-                              4.0 * (Y5 + Y6 + Y7) * Z)) /
-                           128.0;
-
-            nn(i, j) = X1 * (X6 * X10 + X7 * X9 + X8 * X11 + X1) / 64.0 +
-                       Y1 * (Y8 * Y11 + Y6 * Y10 + Y7 * Y9 + Y1) / 64.0;
-
-            hh(j, i) = hh(i, j);
-            nn(j, i) = nn(i, j);
-        }
-    }
-}
 
 int main() {
     std::cout << std::setprecision(std::numeric_limits<scalar>::max_digits10) << scientific;
@@ -251,12 +59,9 @@ int main() {
     scalar eold = eig;
     scalar eprev;
 
-    Matrix<scalar, Dynamic, 3> phi(n, 3);
-    para2(phi, x);
+    const auto phi = generate_wf(x, n);
 
-    Matrix<scalar, Dynamic, Dynamic> dh(n, n);
-    Matrix<scalar, Dynamic, Dynamic> dn(n, n);
-    hamlnorm(dh, dn, phi);
+    const auto [dh, dn] = generate_matrices(phi);
 
     Matrix<scalar, Dynamic, 1> v = Matrix<scalar, Dynamic, 1>::Ones(n);
     Matrix<scalar, Dynamic, 1> w = v;
