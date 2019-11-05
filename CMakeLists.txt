@@ -28,7 +28,7 @@ target_compile_features(he_kor
 
 target_compile_options(he_kor 
                        PRIVATE 
-                       -Wall -Wextra -pedantic)
+                       -Wall -Wextra -pedantic -march=native)
 
 target_link_libraries(he_kor 
                         PRIVATE 

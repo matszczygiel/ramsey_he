@@ -120,5 +120,5 @@ generate_matrices(
         }
     }
 
-    return std::make_tuple(h ,s);
+    return std::make_tuple(h, s);
 }
