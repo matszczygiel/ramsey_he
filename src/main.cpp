@@ -64,7 +64,7 @@ int main() {
     Matrix<scalar, Dynamic, 1> v = Matrix<scalar, Dynamic, 1>::Ones(n);
     Matrix<scalar, Dynamic, 1> w = v;
 
-    const auto ham_dec = (dh - eig * dn).ldlt();
+    const auto ham_dec = (dh - eig * dn).llt();
 
     scalar sm(1.0);
     int it = 1;

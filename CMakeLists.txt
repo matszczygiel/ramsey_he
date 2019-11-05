@@ -17,7 +17,9 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS
 
 find_package(OpenMP REQUIRED)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
-    
+
+find_library(gmp NAMES libgmp.so)
+find_library(mpfr NAMES libmpfr.so)
 
 
 add_executable(he_kor ${sources})
@@ -32,6 +34,6 @@ target_compile_options(he_kor
 
 target_link_libraries(he_kor 
                         PRIVATE 
-                        OpenMP::OpenMP_CXX Eigen3::Eigen)
+                        OpenMP::OpenMP_CXX Eigen3::Eigen ${gmp} ${mpfr})
 
                        

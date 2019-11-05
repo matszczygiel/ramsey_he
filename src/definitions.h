@@ -1,6 +1,8 @@
 #pragma once 
 
 #include <boost/multiprecision/cpp_bin_float.hpp>
+#include <boost/multiprecision/gmp.hpp>
+#include <boost/multiprecision/mpfr.hpp>
 #include <eigen3/Eigen/Dense>
 
 namespace boost {
@@ -11,6 +13,7 @@ using cpp_bin_float_oct = number<backends::cpp_bin_float<237, backends::digit_ba
 
 // floating point type
 using scalar = boost::multiprecision::cpp_bin_float_oct;
+//using scalar = boost::multiprecision::mpfr_float_50;
 
 namespace Eigen {
 template <>
