@@ -1,4 +1,4 @@
-# ramsey_he
+# Helium ground state
 
 Program for calculation of nonrelativistic ground state energy of helium atom.
 
