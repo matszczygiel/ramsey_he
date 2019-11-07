@@ -7,41 +7,43 @@
 
 using namespace Eigen;
 
-Matrix<scalar, Dynamic, 3> generate_wf(const Matrix<scalar, 14, 1>& x, int rows) {
+Matrix<scalar, Dynamic, 3> generate_wf(const std::array<scalar, m>& x, int rows) {
     Matrix<scalar, Dynamic, 3> phi(rows, 3);
-    std::uniform_real_distribution<> dis(0.0, 1.0);
-    auto& rd = random_engine();
+//    std::uniform_real_distribution<> dis(0.0, 1.0);
+//    static auto rd_seed = std::random_device{}();
+//    std::mt19937 rd{rd_seed};
+    Ranmar rd(ranmar_i, ranmar_j);
     {
-        const auto& a1 = x(0);
-        const auto& a2 = x(1);
-        const auto& b1 = x(2);
-        const auto& b2 = x(3);
-        const auto& c1 = x(4);
-        const auto& c2 = x(5);
-        const auto& de = x(6);
+        const auto& a1 = x[0];
+        const auto& a2 = x[1];
+        const auto& b1 = x[2];
+        const auto& b2 = x[3];
+        const auto& c1 = x[4];
+        const auto& c2 = x[5];
+        const auto& de = x[6];
 
         for (int i = 0; i < phi.rows() / 2; ++i) {
             do {
-                phi(i, 0) = dis(rd) * (a2 - a1) + a1;
-                phi(i, 1) = dis(rd) * (b2 - b1) + b1;
-                phi(i, 2) = dis(rd) * (c2 - c1) + c1;
+                phi(i, 0) = rd() * (a2 - a1) + a1;
+                phi(i, 1) = rd() * (b2 - b1) + b1;
+                phi(i, 2) = rd() * (c2 - c1) + c1;
             } while (phi(i, 0) + phi(i, 1) < de || phi(i, 1) + phi(i, 2) < de || phi(i, 0) + phi(i, 2) < de);
         }
     }
     {
-        const auto& a1 = x(7);
-        const auto& a2 = x(8);
-        const auto& b1 = x(9);
-        const auto& b2 = x(10);
-        const auto& c1 = x(11);
-        const auto& c2 = x(12);
-        const auto& de = x(13);
+        const auto& a1 = x[7];
+        const auto& a2 = x[8];
+        const auto& b1 = x[9];
+        const auto& b2 = x[10];
+        const auto& c1 = x[11];
+        const auto& c2 = x[12];
+        const auto& de = x[13];
 
         for (int i = phi.rows() / 2; i < phi.rows(); ++i) {
             do {
-                phi(i, 0) = dis(rd) * (a2 - a1) + a1;
-                phi(i, 1) = dis(rd) * (b2 - b1) + b1;
-                phi(i, 2) = dis(rd) * (c2 - c1) + c1;
+                phi(i, 0) = rd() * (a2 - a1) + a1;
+                phi(i, 1) = rd() * (b2 - b1) + b1;
+                phi(i, 2) = rd() * (c2 - c1) + c1;
             } while (phi(i, 0) + phi(i, 1) < de || phi(i, 1) + phi(i, 2) < de || phi(i, 0) + phi(i, 2) < de);
         }
     }

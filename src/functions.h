@@ -1,10 +1,12 @@
 #pragma once
 
+#include <array>
+
 #include <eigen3/Eigen/Dense>
 
 #include "definitions.h"
 
-Eigen::Matrix<scalar, Eigen::Dynamic, 3> generate_wf(const Eigen::Matrix<scalar, 14, 1>& x, int rows);
+Eigen::Matrix<scalar, Eigen::Dynamic, 3> generate_wf(const std::array<scalar, m>& x, int rows);
 
 std::tuple<Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic>,
            Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic>>

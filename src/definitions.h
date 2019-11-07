@@ -24,3 +24,6 @@ struct NumTraits<scalar>
 }  // namespace Eigen
 
 constexpr int max_iterations = 150;
+constexpr int m = 14;
+constexpr int ranmar_i = 6;
+constexpr int ranmar_j = 17;

@@ -14,12 +14,12 @@ int main() {
     cout << " Using " << nbThreads() << " threads" << endl;
     cout << setprecision(numeric_limits<scalar>::max_digits10) << scientific;
 
-    constexpr int m = 14;
+    
     constexpr int n = 1500;
     const scalar en_drake("-2.903724377034119598311e+00");
 
-    Matrix<scalar, m, 1> x;
-    x << scalar("1.5484825102880660e+00"),
+    const array<scalar, m> x = {
+        scalar("1.5484825102880660e+00"),
         scalar("3.9450565843621390e+00"),
         scalar("1.2518569958847740e+00"),
         scalar("7.0881138516837940e+00"),
@@ -32,7 +32,7 @@ int main() {
         scalar("1.3306565704140900e+01"),
         scalar("6.2832879717888820e+00"),
         scalar("1.5187919971788840e+01"),
-        scalar("3.4031638437888390e+00");
+        scalar("3.4031638437888390e+00")};
 
     const scalar epsilon("1.0e-40");
     scalar eig        = en_drake - 1.0e-5;
