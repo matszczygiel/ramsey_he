@@ -14,6 +14,7 @@ using cpp_bin_float_oct = number<backends::cpp_bin_float<237, backends::digit_ba
 // floating point type
 using scalar = boost::multiprecision::cpp_bin_float_oct;
 //using scalar = boost::multiprecision::mpfr_float_50;
+//using scalar = boost::multiprecision::cpp_bin_float_100;
 
 namespace Eigen {
 template <>
@@ -21,3 +22,5 @@ struct NumTraits<scalar>
     : GenericNumTraits<scalar> {
 };
 }  // namespace Eigen
+
+constexpr int max_iterations = 150;
