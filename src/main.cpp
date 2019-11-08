@@ -14,7 +14,6 @@ int main() {
     cout << " Using " << nbThreads() << " threads" << endl;
     cout << setprecision(numeric_limits<scalar>::max_digits10) << scientific;
 
-    
     constexpr int n = 1500;
     const scalar en_drake("-2.903724377034119598311e+00");
 
@@ -34,9 +33,9 @@ int main() {
         scalar("1.5187919971788840e+01"),
         scalar("3.4031638437888390e+00")};
 
-    const scalar epsilon("1.0e-40");
-    scalar eig        = en_drake - 1.0e-5;
-    const scalar eold = eig;
+    const scalar epsilon = 1.0e-40;
+    scalar eig           = en_drake - 1.0e-5;
+    const scalar eold    = eig;
 
     const auto phi = generate_wf(x, n);
 
