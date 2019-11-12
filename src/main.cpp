@@ -5,6 +5,7 @@
 
 #include "definitions.h"
 #include "functions.h"
+#include "nelder_mead.h"
 
 using namespace Eigen;
 using namespace std;
@@ -38,7 +39,7 @@ int main() {
 
     //n=100
 
-    const array<scalar, m> x = {
+    array<scalar, m> xv = {
         scalar("1.2845084222741440e+00"),
         scalar("2.5525827520389550e+00"),
         scalar("1.3022061582156230e+00"),
@@ -55,47 +56,45 @@ int main() {
         scalar("2.8616266805520390e+00"),
     };
 
-    const scalar epsilon = 1.0e-40;
-    scalar eig           = en_drake - 1.0e-5;
-    const scalar eold    = eig;
+    const auto target = [&en_drake](const array<scalar, m>& x) {
+        const scalar epsilon = 1.0e-40;
+        scalar eig           = en_drake - 1.0e-5;
+        const scalar eold    = eig;
 
-    const auto phi = generate_wf(x, n);
+        const auto phi = generate_wf(x, n);
 
-    const auto [dh, dn] = generate_matrices(phi);
+        const auto [dh, dn] = generate_matrices(phi);
 
-    Matrix<scalar, Dynamic, 1> v = Matrix<scalar, Dynamic, 1>::Ones(n);
-    Matrix<scalar, Dynamic, 1> w = v;
+        Matrix<scalar, Dynamic, 1> v = Matrix<scalar, Dynamic, 1>::Ones(n);
+        Matrix<scalar, Dynamic, 1> w = v;
 
-    const auto ham_dec = (dh - eig * dn).ldlt();
+        const auto ham_dec = (dh - eig * dn).ldlt();
 
-    cout << " Decomposition info:\n";
-    check_and_report_eigen_info(cout, ham_dec.info());
+        scalar eprev;
+        scalar sm(1.0);
+        int it = 1;
+        for (; it <= max_iterations; ++it) {
+            v     = ham_dec.solve(w * sm);
+            w     = dn * v;
+            sm    = 1.0 / sqrt(v.dot(w));
+            eprev = eig;
+            eig   = eold + sm;
+            if (abs(eprev - eig) < epsilon * abs(eig))
+                break;
+        }
+        if (it == max_iterations) {
+            cout << " itmax or eps too small\n"
+                 << " lack of convergence in inverse iteration\n";
+        }
+        return eig;
+    };
 
-    scalar eprev;
-    scalar sm(1.0);
-    int it = 1;
-    for (; it <= max_iterations; ++it) {
-        v     = ham_dec.solve(w * sm);
-        w     = dn * v;
-        sm    = 1.0 / sqrt(v.dot(w));
-        eprev = eig;
-        eig   = eold + sm;
-        cout << "it = " << it << "  eig = " << eig << endl;
-        if (abs(eprev - eig) < epsilon * abs(eig))
-            break;
-    }
-    if (it == max_iterations) {
-        cout << " itmax or eps too small\n"
-             << " lack of convergence in inverse iteration\n";
-    }
+    const auto en = nelder_mead_minimize<scalar, m>(target, xv, scalar(5.0e-2), 2.0, 2.0, 0.5, scalar(1.0e-40), 50);
 
-    cout << "n   =     " << n << '\n'
-         << "eig =     " << eig << '\n';
-
-    v *= sm;
-
-    cout << "norm - 1 =  " << v.dot(dn * v) - scalar(1.0) << '\n';
-    const auto est = v.dot(dh * v);
-    cout << "est =       " << est << '\n'
-         << "eig - est = " << eig - est << '\n';
+    cout << "FINAL RESULT\n"
+         << "energy:\n"
+         << en << '\n'
+         << "x vec:\n";
+    for (const auto& xi : xv)
+        cout << xi << '\n';
 }

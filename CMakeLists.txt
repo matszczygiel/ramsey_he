@@ -32,8 +32,27 @@ target_compile_options(he_kor
                        PRIVATE 
                        -Wall -Wextra -pedantic -march=native)
 
+#target_compile_definitions(he_kor
+#                            PRIVATE
+#                            EIGEN_DONT_PARALLELIZE)                                              
+
 target_link_libraries(he_kor 
                         PRIVATE 
                         OpenMP::OpenMP_CXX Eigen3::Eigen ${gmp} ${mpfr})
+
+add_executable(nm_test 
+                tests/nelder_mead.cpp
+                src/nelder_mead.h)        
+
+
+target_compile_features(nm_test 
+                PRIVATE 
+                cxx_std_17)                
+
+target_include_directories(nm_test PRIVATE src)
+
+target_compile_options(nm_test
+                       PRIVATE 
+                       -Wall -Wextra -pedantic)
 
                        
