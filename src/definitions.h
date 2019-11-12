@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/gmp.hpp>
@@ -24,6 +24,6 @@ struct NumTraits<scalar>
 }  // namespace Eigen
 
 constexpr int max_iterations = 150;
-constexpr int m = 14;
-constexpr int ranmar_i = 6;
-constexpr int ranmar_j = 17;
+constexpr int m              = 14;
+constexpr int ranmar_i       = 6;
+constexpr int ranmar_j       = 17;
