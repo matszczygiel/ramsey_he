@@ -11,8 +11,9 @@ using namespace Eigen;
 using namespace std;
 
 int main() {
+    Eigen::initParallel();
     ios::sync_with_stdio(false);
-    cout << " Using " << nbThreads() << " threads" << endl;
+    cout << " Eigen is using " << nbThreads() << " threads" << endl;
     cout << setprecision(numeric_limits<scalar>::max_digits10) << scientific;
 
     constexpr int n = 100;
@@ -88,7 +89,7 @@ int main() {
         return eig;
     };
 
-    const auto en = nelder_mead_minimize<scalar, m>(
+    const auto en = nelder_mead_minimize_parallel<scalar, m>(
         target, xv, scalar(5.0e-2), 1.0, 2.0, 0.5, 0.5, scalar(1.0e-40), 50);
 
     cout << "FINAL RESULT\n"
