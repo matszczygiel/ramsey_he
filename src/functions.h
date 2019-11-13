@@ -6,7 +6,7 @@
 
 #include "definitions.h"
 
-Eigen::Matrix<scalar, Eigen::Dynamic, 3> generate_wf(const std::array<scalar, m>& x, int rows);
+Eigen::Matrix<scalar, Eigen::Dynamic, 3> generate_wf(const Eigen::Matrix<scalar, m, 1>& x, int rows);
 
 std::tuple<Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic>,
            Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic>>

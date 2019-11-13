@@ -25,7 +25,7 @@ T nelder_mead_minimize(const std::function<T(const Eigen::Matrix<T, N, 1>&)>& fu
 
     using Vec_t = std::decay_t<decltype(x)>;
 
-    std::array<std::pair<Vec_t, T>, N + 1 > xfn;
+    std::array<std::pair<Vec_t, T>, N + 1> xfn;
     const auto sort_xfns = [&xfn]() { std::sort(xfn.begin(), xfn.end(), [](const auto& xf1, const auto& xf2) {
                                           return xf1.second < xf2.second;
                                       }); };
@@ -99,8 +99,8 @@ T nelder_mead_minimize(const std::function<T(const Eigen::Matrix<T, N, 1>&)>& fu
         std::tie(x, current_minimum) = xfn.back();
         print_info();
 
-        //     if (abs(last_min - current_minimum) < epsilon)
-        //         break;
+        if (abs(last_min - current_minimum) < epsilon)
+            break;
     }
 
     return current_minimum;

@@ -39,8 +39,8 @@ int main() {
 
     //n=100
 
-    array<scalar, m> xv = {
-        scalar("1.2845084222741440e+00"),
+    Matrix<scalar, m, 1> xv;
+    xv << scalar("1.2845084222741440e+00"),
         scalar("2.5525827520389550e+00"),
         scalar("1.3022061582156230e+00"),
         scalar("5.2592228607912200e+00"),
@@ -53,10 +53,9 @@ int main() {
         scalar("6.5776225188830830e+00"),
         scalar("-2.1506973153746800e-01"),
         scalar("1.9548131347420990e+00"),
-        scalar("2.8616266805520390e+00"),
-    };
+        scalar("2.8616266805520390e+00");
 
-    const auto target = [&en_drake](const array<scalar, m>& x) {
+    const auto target = [&en_drake](const Matrix<scalar, m, 1>& x) {
         const scalar epsilon = 1.0e-40;
         scalar eig           = en_drake - 1.0e-5;
         const scalar eold    = eig;
@@ -89,12 +88,12 @@ int main() {
         return eig;
     };
 
-    const auto en = nelder_mead_minimize<scalar, m>(target, xv, scalar(5.0e-2), 2.0, 2.0, 0.5, scalar(1.0e-40), 50);
+    const auto en = nelder_mead_minimize<scalar, m>(
+        target, xv, scalar(5.0e-2), 1.0, 2.0, 0.5, 0.5, scalar(1.0e-40), 50);
 
     cout << "FINAL RESULT\n"
          << "energy:\n"
          << en << '\n'
          << "x vec:\n";
-    for (const auto& xi : xv)
-        cout << xi << '\n';
+    cout << xv << '\n';
 }
