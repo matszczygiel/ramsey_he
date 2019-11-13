@@ -16,13 +16,13 @@ int main() {
     cout << " Eigen is using " << nbThreads() << " threads" << endl;
     cout << setprecision(numeric_limits<scalar>::max_digits10) << scientific;
 
-    constexpr int n = 100;
+    constexpr int n = 1500;
     const scalar en_drake("-2.903724377034119598311e+00");
 
+    Matrix<scalar, m, 1> xv;
+
     //n=1500
-    /*    
-    const array<scalar, m> x = {
-        scalar("1.5484825102880660e+00"),
+    xv << scalar("1.5484825102880660e+00"),
         scalar("3.9450565843621390e+00"),
         scalar("1.2518569958847740e+00"),
         scalar("7.0881138516837940e+00"),
@@ -35,12 +35,10 @@ int main() {
         scalar("1.3306565704140900e+01"),
         scalar("6.2832879717888820e+00"),
         scalar("1.5187919971788840e+01"),
-        scalar("3.4031638437888390e+00")};
-*/
+        scalar("3.4031638437888390e+00");
 
     //n=100
-
-    Matrix<scalar, m, 1> xv;
+    /*
     xv << scalar("1.2845084222741440e+00"),
         scalar("2.5525827520389550e+00"),
         scalar("1.3022061582156230e+00"),
@@ -55,7 +53,7 @@ int main() {
         scalar("-2.1506973153746800e-01"),
         scalar("1.9548131347420990e+00"),
         scalar("2.8616266805520390e+00");
-
+*/
     const auto target = [&en_drake](const Matrix<scalar, m, 1>& x) {
         const scalar epsilon = 1.0e-40;
         scalar eig           = en_drake - 1.0e-5;
@@ -90,7 +88,7 @@ int main() {
     };
 
     const auto en = nelder_mead_minimize_parallel<scalar, m>(
-        target, xv, scalar(5.0e-2), 1.0, 2.0, 0.5, 0.5, scalar(1.0e-40), 50);
+        target, xv, scalar(5.0e-2), 1.0, 2.0, 0.5, 0.5, scalar(1.0e-40), 150);
 
     cout << "FINAL RESULT\n"
          << "energy:\n"
