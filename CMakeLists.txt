@@ -32,9 +32,6 @@ target_compile_options(he_kor
                        PRIVATE 
                        -Wall -Wextra -pedantic -march=native)
 
-#target_compile_definitions(he_kor
-#                            PRIVATE
-#                            EIGEN_DONT_PARALLELIZE)                                              
 
 target_link_libraries(he_kor 
                         PRIVATE 

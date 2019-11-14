@@ -14,7 +14,7 @@ int main() {
 
     Eigen::Matrix<double, 2, 1> x;
     x << 2.0, -1.0;
-    const auto f_min        = nelder_mead_minimize<double, 2>(rosenbrock, x, 0.2, 1.0, 2.0, 0.5, 0.5, 1.0e-10, 100);
+    const auto f_min        = nelder_mead_minimize<double, 2>(rosenbrock, x, 0.2, 1.0, 2.0, 0.5, 0.5, 100);
 
     std::cout << "FINAL RESULT\n"
               << " from nelder_mead:\n"

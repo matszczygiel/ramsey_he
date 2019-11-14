@@ -17,7 +17,7 @@
 template <class T, int N>
 T nelder_mead_minimize(const std::function<T(const Eigen::Matrix<T, N, 1>&)>& func, Eigen::Matrix<T, N, 1>& x,
                        T initial_var, const double& alpha, const double& gamma, const double& rho, const double& sigma,
-                       const T& epsilon, int max_iters) {
+                       int max_iters) {
     assert(alpha > 0.0);
     assert(gamma > 1.0);
     assert(0.5 >= rho && rho > 0.0);
@@ -46,7 +46,10 @@ T nelder_mead_minimize(const std::function<T(const Eigen::Matrix<T, N, 1>&)>& fu
 
     sort_xfns();
 
-    std::tie(x, current_minimum) = xfn.back();
+    for (const auto& xf : xfn)
+        std::cout << xf.second << std::endl;
+
+    std::tie(x, current_minimum) = xfn.front();
 
     std::cout << " inital parameters\n";
     print_info();
@@ -92,12 +95,8 @@ T nelder_mead_minimize(const std::function<T(const Eigen::Matrix<T, N, 1>&)>& fu
             }
         }
         sort_xfns();
-        const auto last_min          = current_minimum;
-        std::tie(x, current_minimum) = xfn.back();
+        std::tie(x, current_minimum) = xfn.front();
         print_info();
-
-        if (abs(last_min - current_minimum) < epsilon)
-            break;
     }
 
     return current_minimum;
@@ -109,7 +108,7 @@ T nelder_mead_minimize(const std::function<T(const Eigen::Matrix<T, N, 1>&)>& fu
 template <class T, int N>
 T nelder_mead_minimize_parallel(const std::function<T(const Eigen::Matrix<T, N, 1>&)>& func, Eigen::Matrix<T, N, 1>& x,
                                 T initial_var, const double& alpha, const double& gamma, const double& rho, const double& sigma,
-                                const T& epsilon, int max_iters) {
+                                int max_iters) {
     assert(alpha > 0.0);
     assert(gamma > 1.0);
     assert(0.5 >= rho && rho > 0.0);
@@ -144,7 +143,7 @@ T nelder_mead_minimize_parallel(const std::function<T(const Eigen::Matrix<T, N, 
     }
     sort_xfns();
 
-    std::tie(x, current_minimum) = xfn.back();
+    std::tie(x, current_minimum) = xfn.front();
 
     std::cout << " inital parameters\n";
     print_info();
@@ -194,12 +193,8 @@ T nelder_mead_minimize_parallel(const std::function<T(const Eigen::Matrix<T, N, 
             }
         }
         sort_xfns();
-        const auto last_min          = current_minimum;
-        std::tie(x, current_minimum) = xfn.back();
+        std::tie(x, current_minimum) = xfn.front();
         print_info();
-
-        if (abs(last_min - current_minimum) < epsilon)
-            break;
     }
 
     return current_minimum;
