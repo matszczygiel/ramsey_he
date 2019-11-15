@@ -7,7 +7,7 @@
 
 using namespace Eigen;
 
-Matrix<scalar, Dynamic, 3> generate_wf(const Matrix<scalar, m, 1>& x, int rows) {
+Matrix<scalar, Dynamic, 3> generate_basis(const Matrix<scalar, m, 1>& x, int rows) {
     Matrix<scalar, Dynamic, 3> phi(rows, 3);
 //    std::uniform_real_distribution<> dis(0.0, 1.0);
 //    static auto rd_seed = std::random_device{}();
@@ -116,6 +116,7 @@ generate_matrices(
 
             s(i, j) = X1 * (X6 * X10 + X7 * X9 + X8 * X11 + X1) / 64.0 +
                       Y1 * (Y8 * Y11 + Y6 * Y10 + Y7 * Y9 + Y1) / 64.0;
+
 
             h(j, i) = h(i, j);
             s(j, i) = s(i, j);

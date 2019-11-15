@@ -6,13 +6,6 @@
 
 #include "definitions.h"
 
-Eigen::Matrix<scalar, Eigen::Dynamic, 3> generate_wf(const Eigen::Matrix<scalar, m, 1>& x, int rows);
-
-std::tuple<Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic>,
-           Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic>>
-generate_matrices(
-    const Eigen::Matrix<scalar, Eigen::Dynamic, 3>& phi);
-
 inline bool check_and_report_eigen_info(std::ostream& os, const Eigen::ComputationInfo& info) {
     switch (info) {
         case Eigen::ComputationInfo::NumericalIssue:
@@ -31,3 +24,16 @@ inline bool check_and_report_eigen_info(std::ostream& os, const Eigen::Computati
     }
     return false;
 }
+
+Eigen::Matrix<scalar, Eigen::Dynamic, 3> generate_basis(const Eigen::Matrix<scalar, m, 1>& x, int rows);
+
+std::tuple<Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic>,
+           Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic>>
+generate_matrices(
+    const Eigen::Matrix<scalar, Eigen::Dynamic, 3>& phi);
+
+
+
+
+
+
