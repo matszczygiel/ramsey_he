@@ -25,15 +25,12 @@ inline bool check_and_report_eigen_info(std::ostream& os, const Eigen::Computati
     return false;
 }
 
-Eigen::Matrix<scalar, Eigen::Dynamic, 3> generate_basis(const Eigen::Matrix<scalar, m, 1>& x, int rows);
+using Basis = Eigen::Matrix<scalar, Eigen::Dynamic, 3>;
 
-std::tuple<Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic>,
-           Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic>>
-generate_matrices(
-    const Eigen::Matrix<scalar, Eigen::Dynamic, 3>& phi);
+Basis generate_basis(const Eigen::Matrix<scalar, m, 1>& x, int rows);
 
+using Hamiltonian = Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic>;
+using Overlap     = Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic>;
 
-
-
-
-
+std::tuple<Hamiltonian, Overlap> generate_matrices_S(const Basis& phi);
+std::tuple<Hamiltonian, Overlap> generate_matrices_P(const Basis& phi);

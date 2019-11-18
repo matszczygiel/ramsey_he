@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -62,7 +63,7 @@ int main() {
 
         const auto phi = generate_basis(x, n);
 
-        const auto [dh, dn] = generate_matrices(phi);
+        const auto [dh, dn] = generate_matrices_S(phi);
 
         Matrix<scalar, Dynamic, 1> v = Matrix<scalar, Dynamic, 1>::Ones(n);
         Matrix<scalar, Dynamic, 1> w = v;
@@ -89,11 +90,18 @@ int main() {
     };
 
     const auto en = nelder_mead_minimize_parallel<scalar, m>(
-        target, xv, scalar(5.0e-2), 1.0, 2.0, 0.5, 0.5, 150);
+        target, xv, scalar(5.0e-2), 1.0, 2.0, 0.5, 0.5, 500);
 
     cout << "FINAL RESULT\n"
          << "energy:\n"
          << en << '\n'
          << "x vec:\n";
     cout << xv << '\n';
+
+    ofstream ofs("basis_1s.dat");
+    ofs << setprecision(numeric_limits<scalar>::max_digits10) << scientific;
+    ofs << "# E = " << en << '\n'
+        << "# n = " << n << '\n'
+        << generate_basis(xv, n) << '\n';
+    ofs.close();
 }
