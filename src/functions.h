@@ -1,6 +1,10 @@
 #pragma once
 
+#include <fstream>
 #include <random>
+#include <sstream>
+#include <string>
+#include <string_view>
 #include <tuple>
 
 #include <eigen3/Eigen/Dense>
@@ -41,6 +45,25 @@ template <class T>
 std::tuple<Hamiltonian<T>, Overlap<T>> generate_matrices_S(const Basis<T>& phi);
 template <class T>
 std::tuple<Hamiltonian<T>, Overlap<T>> generate_matrices_P(const Basis<T>& phi);
+
+template <class T>
+using Current = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+
+template <class T>
+Current<T> generate_current_PS(const Basis<T>& phi_P, const Basis<T>& phi_S);
+
+template <class T>
+using Energy = T;
+
+template <class T>
+std::tuple<Energy<T>, Basis<T>> load_basis(const std::string_view filename);
+
+template <class T>
+using Wavefunction = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+
+template <class T>
+std::tuple<Energy<T>, Wavefunction<T>> solve_for_state(const Hamiltonian<T>& h, const Overlap<T>& n,
+                                                       const Energy<T> approx_eigenvalue);
 
 template <class T>
 Basis<T> generate_basis(const Eigen::Matrix<T, m, 1>& x, int rows) {
@@ -269,4 +292,107 @@ std::tuple<Hamiltonian<T>, Overlap<T>> generate_matrices_P(const Basis<T>& phi) 
     }
 
     return {h, s};
+}
+
+template <class T>
+Current<T> generate_current_PS(const Basis<T>& phi_P, const Basis<T>& phi_S) {
+    const auto size_p = phi_P.size();
+    const auto size_s = phi_S.size();
+
+    Current<T> hj(size_p, size_s);
+
+    for (int i = 0; i < size_p; ++i) {
+        const auto& a1 = phi_P(i, 0);
+        const auto& b1 = phi_P(i, 1);
+        const auto& c1 = phi_P(i, 2);
+
+        for (int j = 0; j < size_s; ++j) {
+            const auto& a2 = phi_S(j, 0);
+            const auto& b2 = phi_S(j, 1);
+            const auto& c2 = phi_S(j, 2);
+
+            const auto a = 2.0 / (b1 + b2 + c1 + c2);
+            const auto b = 2.0 / (a1 + a2 + c1 + c2);
+            const auto c = 2.0 / (a1 + a2 + b1 + b2);
+            const auto d = 2.0 / (a1 + b2 + c1 + c2);
+            const auto e = 2.0 / (b1 + a2 + c1 + c2);
+
+            hj(i, j) = (-3 * a * b * c *
+                        (a * a * a * b * b - 2 * a * b * b * b * b - a * a * b * b * c -
+                         2 * a * b * b * b * c - 2 * b * b * b * b * c - a * a * a * c * c -
+                         2 * a * a * b * c * c - 3 * a * b * b * c * c - 4 * b * b * b * c * c -
+                         3 * a * a * c * c * c - 4 * a * b * c * c * c - 5 * b * b * c * c * c -
+                         4 * a * c * c * c * c - 4 * b * c * c * c * c)) /
+                           128.0 -
+                       (3 * c * d * e *
+                        (-4 * c * c * c * c * d - 5 * c * c * c * d * d - 4 * c * c * d * d * d -
+                         2 * c * d * d * d * d - 4 * c * c * c * c * e - 4 * c * c * c * d * e -
+                         3 * c * c * d * d * e - 2 * c * d * d * d * e - 2 * d * d * d * d * e -
+                         3 * c * c * c * e * e - 2 * c * c * d * e * e - c * d * d * e * e -
+                         c * c * e * e * e + d * d * e * e * e)) /
+                           128.0;
+        }
+    }
+}
+
+template <class T>
+std::tuple<Energy<T>, Basis<T>> load_basis(const std::string_view filename) {
+    std::ifstream file(filename.data());
+
+    std::string line;
+    std::getline(file, line);
+    if (line[0] != '#')
+        throw std::runtime_error("Invalid input file!");
+
+    line.erase(0, 6);
+    const Energy<T> en(line);
+
+    std::getline(file, line);
+    if (line[0] != '#')
+        throw std::runtime_error("Invalid input file!");
+
+    line.erase(0, 6);
+    const auto n = std::stoi(line);
+
+    Basis<T> basis(n, 3);
+
+    for (int i = 0; i < n; ++i) {
+        std::string num0, num1, num2;
+        file >> num0 >> num1 >> num2;
+        basis(i, 0) = T(num0);
+        basis(i, 1) = T(num1);
+        basis(i, 2) = T(num2);
+    }
+
+    return {en, basis};
+}
+
+template <class T>
+std::tuple<Energy<T>, Wavefunction<T>> solve_for_state(const Hamiltonian<T>& h, const Overlap<T>& n,
+                                                       const Energy<T> approx_eigenvalue) {
+    const T epsilon = 1.0e-45;
+    T eig           = approx_eigenvalue;
+
+    Wavefunction<T> v = Wavefunction<T>::Ones(h.cols());
+    Wavefunction<T> w = v;
+
+    const auto ham_dec = (h - eig * n).ldlt();
+
+    T eprev;
+    T sm(1.0);
+    int it = 1;
+    for (; it <= max_iterations; ++it) {
+        v     = ham_dec.solve(w * sm);
+        w     = dn * v;
+        sm    = 1.0 / sqrt(v.dot(w));
+        eprev = eig;
+        eig   = approx_eigenvalue + sm;
+        if (abs(eprev - eig) < epsilon * abs(eig))
+            break;
+    }
+    if (it == max_iterations) {
+        cout << " itmax or eps too small\n"
+             << " lack of convergence in inverse iteration\n";
+    }
+    return {eig, v * sm};
 }
