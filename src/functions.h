@@ -134,7 +134,7 @@ std::tuple<Hamiltonian<T>, Overlap<T>> generate_matrices_S(const Basis<T>& phi) 
             const auto Y10 = e + c;
             const auto Y11 = d + e;
 
-            const scalar Z(2.0);
+            const T Z(2.0);
 
             h(i, j) =
                 (X1 *
@@ -185,7 +185,7 @@ std::tuple<Hamiltonian<T>, Overlap<T>> generate_matrices_P(const Basis<T>& phi) 
             const auto d = 2.0 / (a1 + b2 + c1 + c2);
             const auto e = 2.0 / (b1 + a2 + c1 + c2);
 
-            const scalar Z(2.0);
+            const T Z(2.0);
 
             h(i, j) =
                 (a * (-a1 - a2) * b * c *

@@ -2,28 +2,50 @@
 #include <iostream>
 #include <vector>
 
+#include <boost/multiprecision/cpp_bin_float.hpp>
+#include <boost/multiprecision/gmp.hpp>
+#include <boost/multiprecision/mpfr.hpp>
 #include <eigen3/Eigen/Dense>
 
-#include "definitions.h"
 #include "functions.h"
 #include "nelder_mead.h"
 
 using namespace Eigen;
 using namespace std;
 
+namespace boost {
+namespace multiprecision {
+using cpp_bin_float_oct = number<
+    backends::cpp_bin_float<237, backends::digit_base_2, void, boost::int32_t, -262142, 262143>,
+    et_off>;
+}
+}  // namespace boost
+
+// floating point type
+using scalar = boost::multiprecision::cpp_bin_float_oct;
+// using scalar = boost::multiprecision::mpfr_float_50;
+// using scalar = boost::multiprecision::cpp_bin_float_100;
+
+namespace Eigen {
+template <>
+struct NumTraits<scalar> : GenericNumTraits<scalar> {};
+}  // namespace Eigen
+
 int main() {
+    constexpr int max_iterations = 150;
+    constexpr int n              = 1500;
+    const scalar en_drake("-2.903724377034119598311e+00");
+
     Eigen::initParallel();
     ios::sync_with_stdio(false);
     cout << " Eigen is using " << nbThreads() << " threads" << endl;
     cout << setprecision(numeric_limits<scalar>::max_digits10) << scientific;
 
-    constexpr int n = 1500;
-    const scalar en_drake("-2.903724377034119598311e+00");
-
     Matrix<scalar, m, 1> xv;
 
-    //n=1500
-    xv << scalar("1.43395945662889271988699338620840887501452496176582110691883986955752478733e+00"),
+    // n=1500
+    xv << scalar(
+        "1.43395945662889271988699338620840887501452496176582110691883986955752478733e+00"),
         scalar("4.12058186614899346914274512375693640093555515859509160213779636722720894491e+00"),
         scalar("1.20835377149540318570683907278961927798367735539672593355547883031861981397e+00"),
         scalar("7.10687188828050513081254839707766546333719394998614958844634059007784607205e+00"),
@@ -38,7 +60,7 @@ int main() {
         scalar("1.52082973970572096980061739832193732411505688112338302357266105054273560510e+01"),
         scalar("3.38336569078710771706427163829502551058592316759218886648127769856515974318e+00");
 
-    //n=100
+    // n=100
     /*
     xv << scalar("1.2845084222741440e+00"),
         scalar("2.5525827520389550e+00"),
@@ -89,8 +111,8 @@ int main() {
         return eig;
     };
 
-    const auto en = nelder_mead_minimize_parallel<scalar, m>(
-        target, xv, scalar(5.0e-2), 1.0, 2.0, 0.5, 0.5, 500);
+    const auto en = nelder_mead_minimize_parallel<scalar, m>(target, xv, scalar(5.0e-2), 1.0, 2.0,
+                                                             0.5, 0.5, 500);
 
     cout << "FINAL RESULT\n"
          << "energy:\n"
@@ -100,8 +122,6 @@ int main() {
 
     ofstream ofs("basis_1s.dat");
     ofs << setprecision(numeric_limits<scalar>::max_digits10) << scientific;
-    ofs << "# E = " << en << '\n'
-        << "# n = " << n << '\n'
-        << generate_basis(xv, n) << '\n';
+    ofs << "# E = " << en << '\n' << "# n = " << n << '\n' << generate_basis(xv, n) << '\n';
     ofs.close();
 }
