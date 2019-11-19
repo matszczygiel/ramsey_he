@@ -63,7 +63,9 @@ using Wavefunction = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 
 template <class T>
 std::tuple<Energy<T>, Wavefunction<T>> solve_for_state(const Hamiltonian<T>& h, const Overlap<T>& n,
-                                                       const Energy<T> approx_eigenvalue);
+                                                       const Energy<T> approx_eigenvalue,
+                                                       const int max_iterations,
+                                                       const double& epsilon);
 
 template <class T>
 Basis<T> generate_basis(const Eigen::Matrix<T, m, 1>& x, int rows) {
@@ -333,6 +335,8 @@ Current<T> generate_current_PS(const Basis<T>& phi_P, const Basis<T>& phi_S) {
                            128.0;
         }
     }
+
+    return hj;
 }
 
 template <class T>
@@ -369,9 +373,11 @@ std::tuple<Energy<T>, Basis<T>> load_basis(const std::string_view filename) {
 
 template <class T>
 std::tuple<Energy<T>, Wavefunction<T>> solve_for_state(const Hamiltonian<T>& h, const Overlap<T>& n,
-                                                       const Energy<T> approx_eigenvalue) {
-    const T epsilon = 1.0e-45;
-    T eig           = approx_eigenvalue;
+                                                       const Energy<T> approx_eigenvalue,
+                                                       const int max_iterations,
+                                                       const double& epsilon) {
+    const T eps = epsilon;
+    T eig       = approx_eigenvalue;
 
     Wavefunction<T> v = Wavefunction<T>::Ones(h.cols());
     Wavefunction<T> w = v;
@@ -383,15 +389,15 @@ std::tuple<Energy<T>, Wavefunction<T>> solve_for_state(const Hamiltonian<T>& h, 
     int it = 1;
     for (; it <= max_iterations; ++it) {
         v     = ham_dec.solve(w * sm);
-        w     = dn * v;
+        w     = n * v;
         sm    = 1.0 / sqrt(v.dot(w));
         eprev = eig;
         eig   = approx_eigenvalue + sm;
-        if (abs(eprev - eig) < epsilon * abs(eig))
+        if (abs(eprev - eig) < eps * abs(eig))
             break;
     }
     if (it == max_iterations) {
-        cout << " itmax or eps too small\n"
+        std::cout << " itmax or eps too small\n"
              << " lack of convergence in inverse iteration\n";
     }
     return {eig, v * sm};

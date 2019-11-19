@@ -25,8 +25,8 @@ struct NumTraits<scalar> : GenericNumTraits<scalar> {};
 }  // namespace Eigen
 
 int main() {
-    constexpr int max_iterations = 150;
-    constexpr int n              = 100;
+    constexpr int max_iters = 150;
+    constexpr int n         = 100;
     const scalar en_drake("-2.903724377034119598311e+00");
 
     Eigen::initParallel();
@@ -65,36 +65,9 @@ int main() {
         scalar("2.006913710260977535e+00"), scalar("2.868941166396368203e+00");
 
     const auto target = [&en_drake](const Matrix<scalar, m, 1>& x) {
-        const scalar epsilon = 1.0e-45;
-        scalar eig           = en_drake - 1.0e-5;
-        const scalar eold    = eig;
-
-        const auto phi = generate_basis(x, n);
-
+        const auto phi      = generate_basis(x, n);
         const auto [dh, dn] = generate_matrices_S(phi);
-
-        Matrix<scalar, Dynamic, 1> v = Matrix<scalar, Dynamic, 1>::Ones(n);
-        Matrix<scalar, Dynamic, 1> w = v;
-
-        const auto ham_dec = (dh - eig * dn).ldlt();
-
-        scalar eprev;
-        scalar sm(1.0);
-        int it = 1;
-        for (; it <= max_iterations; ++it) {
-            v     = ham_dec.solve(w * sm);
-            w     = dn * v;
-            sm    = 1.0 / sqrt(v.dot(w));
-            eprev = eig;
-            eig   = eold + sm;
-            if (abs(eprev - eig) < epsilon * abs(eig))
-                break;
-        }
-        if (it == max_iterations) {
-            cout << " itmax or eps too small\n"
-                 << " lack of convergence in inverse iteration\n";
-        }
-        return eig;
+        return get<0>(solve_for_state<scalar>(dh, dn, en_drake - 1.0e-5, max_iters, 1.0e-45));
     };
 
     const auto en = nelder_mead_minimize_parallel<scalar, m>(target, xv, scalar(5.0e-2), 1.0, 2.0,
