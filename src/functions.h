@@ -298,8 +298,8 @@ std::tuple<Hamiltonian<T>, Overlap<T>> generate_matrices_P(const Basis<T>& phi) 
 
 template <class T>
 Current<T> generate_current_PS(const Basis<T>& phi_P, const Basis<T>& phi_S) {
-    const auto size_p = phi_P.size();
-    const auto size_s = phi_S.size();
+    const auto size_p = phi_P.rows();
+    const auto size_s = phi_S.rows();
 
     Current<T> hj(size_p, size_s);
 
@@ -398,7 +398,7 @@ std::tuple<Energy<T>, Wavefunction<T>> solve_for_state(const Hamiltonian<T>& h, 
     }
     if (it == max_iterations) {
         std::cout << " itmax or eps too small\n"
-             << " lack of convergence in inverse iteration\n";
+                  << " lack of convergence in inverse iteration\n";
     }
     return {eig, v * sm};
 }

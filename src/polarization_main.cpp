@@ -23,8 +23,8 @@ struct NumTraits<scalar> : GenericNumTraits<scalar> {};
 }  // namespace Eigen
 
 int main() {
-    const auto basis_s_file = "basis_1s.dat";
-    const auto basis_p_file = "basis_2p.dat";
+    const auto basis_s_file = "/home/Mateusz/workspace/he_ramsey/he_cpp/build/basis_1s.dat";
+    const auto basis_p_file = "/home/Mateusz/workspace/he_ramsey/he_cpp/build/basis_2p.dat";
 
     const scalar en_drake_s("-2.903724377034119598311e+00");
     constexpr int max_iters = 150;
@@ -50,13 +50,18 @@ int main() {
 
     constexpr double eps = 1.0e-8;
 
-    auto j_times_s = (j_ps * wf_s).eval();
-
-    auto res_denom = (h_p - en_s * n_p).eval();
+    Hamiltonian<scalar> res_denom = h_p - en_s * n_p;
     res_denom += res_denom.diagonal().asDiagonal() * eps;
-    res_denom.ldlt().solveInPlace(j_times_s);
+    auto ham_dec = res_denom.ldlt();
 
-    const auto pol = j_times_s.squaredNorm() * 2.0 / 3.0;
+    const Wavefunction<scalar> j_times_s = j_ps * wf_s;
+
+    const Wavefunction<scalar> res = ham_dec.solve(j_times_s);
+
+    check_and_report_eigen_info(cout, ham_dec.info());
+    
+
+    const auto pol = res.squaredNorm() * 2.0 / 3.0;
 
     cout << pol << '\n';
 }
