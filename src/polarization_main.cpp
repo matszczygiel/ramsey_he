@@ -14,6 +14,7 @@ using namespace std;
 
 // floating point type
 using scalar = boost::multiprecision::cpp_bin_float_double;
+//using scalar = boost::multiprecision::cpp_bin_float_oct;
 // using scalar = boost::multiprecision::mpfr_float_50;
 // using scalar = boost::multiprecision::cpp_bin_float_100;
 
@@ -48,20 +49,16 @@ int main() {
              << flush;
     }
 
-    constexpr double eps = 1.0e-8;
+    constexpr double eps = 0.0;
 
     Hamiltonian<scalar> res_denom = h_p - en_s * n_p;
     res_denom += res_denom.diagonal().asDiagonal() * eps;
     auto ham_dec = res_denom.ldlt();
 
-    const Wavefunction<scalar> j_times_s = j_ps * wf_s;
-
-    const Wavefunction<scalar> res = ham_dec.solve(j_times_s);
-
+    const auto j_times_s = j_ps * wf_s;
+    const auto res       = ham_dec.solve(j_times_s);
     check_and_report_eigen_info(cout, ham_dec.info());
-    
 
-    const auto pol = res.squaredNorm() * 2.0 / 3.0;
-
+    const auto pol = j_times_s.dot(res) * 2.0 / 3.0;
     cout << pol << '\n';
 }
